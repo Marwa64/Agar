@@ -1,0 +1,15 @@
+.circle{
+  background-color: blue;
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  transform: translate(200px, 200px) scale(1);
+  transition: all 4s;
+}
+.food{
+  background-color: red;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  transform: translate(600px, 600px);
+}
