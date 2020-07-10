@@ -1,7 +1,7 @@
 export class Food{
   constructor(){
-    this.x = Math.floor(Math.random() * 1900) + 20;
-    this.y = Math.floor(Math.random() * 1900) ;
+    this.x = Math.floor(Math.random() * 2400);
+    this.y = Math.floor(Math.random() * 1500) ;
   }
   createObject = () => {
     this.circle = document.createElement("div");

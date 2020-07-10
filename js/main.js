@@ -114,10 +114,12 @@ function checkEat(){
     //console.log(i);
     if (allFood[i].checkCollision(playerPos.x, playerPos.y, player.getSize())){
       allFood.splice(i, 1);
+      let newFood  = new Food;
+      newFood.createObject();
+      allFood.push(newFood);
       if (player.eat() && scrollSpeed > 0.05){
         scrollSpeed -= 0.01;
       }
-      console.log(scrollSpeed);
       break;
     }
   }
