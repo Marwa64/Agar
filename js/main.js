@@ -1,7 +1,7 @@
 import {Player} from './player.js';
 import {Food} from './food.js';
 
-let x, y, player, allFood = [];
+let x, y, player, scrollSpeed=0.2, allFood = [];
 
 let edgeSize = 200;
 let timer = null;
@@ -50,9 +50,7 @@ window.addEventListener('mousemove', () => {
   var maxScrollY = ( documentHeight - viewportHeight );
 
   (function checkForWindowScroll() {
-
     clearTimeout( timer );
-
     if ( adjustWindowScroll() ) {
       timer = setTimeout( checkForWindowScroll, 30 );
     }
@@ -72,21 +70,19 @@ window.addEventListener('mousemove', () => {
 
     var maxStep = 50;
 
-    // Should we scroll left?
+    // Scroll left
     if ( isInLeftEdge && canScrollLeft ) {
-      nextScrollX = ( nextScrollX - ( maxStep * 0.05 ) );
-
-    // Should we scroll right?
+      nextScrollX = ( nextScrollX - ( maxStep * scrollSpeed ) );
+    // Scroll right
     } else if ( isInRightEdge && canScrollRight ) {
-      nextScrollX = ( nextScrollX + ( maxStep * 0.05 ) );
+      nextScrollX = ( nextScrollX + ( maxStep * scrollSpeed ) );
     }
-    // Should we scroll up?
+    // Scroll up
     if ( isInTopEdge && canScrollUp ) {
-      nextScrollY = ( nextScrollY - ( maxStep * 0.05 ) );
-
-    // Should we scroll down?
+      nextScrollY = ( nextScrollY - ( maxStep * scrollSpeed ) );
+    // Scroll down
     } else if ( isInBottomEdge && canScrollDown ) {
-      nextScrollY = ( nextScrollY + ( maxStep * 0.05 ) );
+      nextScrollY = ( nextScrollY + ( maxStep * scrollSpeed ) );
     }
     nextScrollX = Math.max( 0, Math.min( maxScrollX, nextScrollX ) );
     nextScrollY = Math.max( 0, Math.min( maxScrollY, nextScrollY ) );
@@ -115,21 +111,19 @@ function checkEat(){
   player.move(x,y);
   let playerPos = player.getObject().getBoundingClientRect();
   for (let i = 0; i < allFood.length; i++){
-    let currentFood = allFood[i].getObject().getBoundingClientRect();
-    if ((playerPos.x < (currentFood.x+5)) && (playerPos.x > (currentFood.x-75)) && (playerPos.y <(currentFood.y+5) && playerPos.y > (currentFood.y-75))){
-      console.log("EAT");
-      allFood[i].removeObject();
+    //console.log(i);
+    if (allFood[i].checkCollision(playerPos.x, playerPos.y, player.getSize())){
       allFood.splice(i, 1);
-      player.eat();
+      if (player.eat() && scrollSpeed > 0.05){
+        scrollSpeed -= 0.01;
+      }
+      console.log(scrollSpeed);
       break;
     }
   }
-  //console.log("Food x: " + foodPos.x + " Food y: " + foodPos.y);
-  //console.log("Player x: " + playerPos.x + " Player y: " + playerPos.y);
-//  console.log("Mouse x: " + x + " Mouse y: " + y);
 }
 loadPlayer();
-loadFood(100);
+loadFood(50);
 console.log(allFood);
 console.log(player);
-setInterval(checkEat, 500);
+setInterval(checkEat, 100);

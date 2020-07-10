@@ -1,7 +1,8 @@
 export class Player{
   constructor(){
     this.size = 1;
-    this.speed = 2; // transition speed
+    this.speed = 1; // transition speed
+    this.toggle = true;
   }
   createObject(x,y){
     this.circle = document.createElement("div");
@@ -13,15 +14,24 @@ export class Player{
     this.circle.remove();
   }
   eat(){
-    this.size += 0.1;
-    let val = this.size * 10;
-    if (val % 5 === 0){
-      this.speed++;
+    this.size += 0.2;
+    if (this.toggle === true){
+      let val = Math.floor(this.size * 10);
+      if (val % 5 === 0 && this.speed < 5){
+        this.speed += 1;
+      }
+      this.circle.style.transitionDuration = `${this.speed}s`;
+      this.toggle = false;
+    } else {
+      this.toggle = true;
     }
-    //this.circle.style.transitionDuration = `${this.speed}s`;
+    return this.toggle;
   }
   move(x,y){
     this.circle.style.transform = `translate(${x}px, ${y}px) scale(${this.size})`;
+  }
+  getSize(){
+    return this.size;
   }
   getObject(){
     return this.circle;

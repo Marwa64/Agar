@@ -1,4 +1,4 @@
-body{
+html{
   width: 2000px;
   height: 2000px;
   overflow: hidden;
@@ -9,7 +9,7 @@ body{
   width: 100px;
   height: 100px;
   transform: translate(200px, 200px) scale(1);
-  transition: all 2s;
+  transition: all 1s;
   position: absolute;
   z-index: 1;
 }
