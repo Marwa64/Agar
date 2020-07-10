@@ -2,7 +2,6 @@ body{
   width: 2000px;
   height: 2000px;
   overflow: hidden;
-  border: 5px solid red;
 }
 .circle{
   background-color: blue;
@@ -11,6 +10,8 @@ body{
   height: 100px;
   transform: translate(200px, 200px) scale(1);
   transition: all 2s;
+  position: absolute;
+  z-index: 1;
 }
 .food{
   background-color: red;

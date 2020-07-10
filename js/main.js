@@ -1,10 +1,7 @@
 import {Player} from './player.js';
+import {Food} from './food.js';
 
-console.log(window.innerWidth);
-console.log(window.innerHeight);
-let circle = document.querySelector(".circle");
-let food = document.querySelector(".food");
-let x, y, size = 1;
+let x, y, player, allFood = [];
 
 let edgeSize = 200;
 let timer = null;
@@ -49,7 +46,6 @@ window.addEventListener('mousemove', () => {
     document.documentElement.offsetHeight,
     document.documentElement.clientHeight
   );
-
   var maxScrollX = ( documentWidth - viewportWidth );
   var maxScrollY = ( documentHeight - viewportHeight );
 
@@ -63,7 +59,6 @@ window.addEventListener('mousemove', () => {
   })();
 
   function adjustWindowScroll() {
-
     var currentScrollX = window.pageXOffset;
     var currentScrollY = window.pageYOffset;
 
@@ -93,7 +88,6 @@ window.addEventListener('mousemove', () => {
     } else if ( isInBottomEdge && canScrollDown ) {
       nextScrollY = ( nextScrollY + ( maxStep * 0.05 ) );
     }
-
     nextScrollX = Math.max( 0, Math.min( maxScrollX, nextScrollX ) );
     nextScrollY = Math.max( 0, Math.min( maxScrollY, nextScrollY ) );
 
@@ -106,18 +100,36 @@ window.addEventListener('mousemove', () => {
   }
 });
 
-function checkEat(){
-  let playerPos = circle.getBoundingClientRect();
-  let foodPos = food.getBoundingClientRect();
-  if ((playerPos.x < (foodPos.x+5)) && (playerPos.x > (foodPos.x-75)) && (playerPos.y <(foodPos.y+5) && playerPos.y > (foodPos.y-75))){
-    console.log("EAT");
-    food.style.visibility = "hidden";
-    size += 0.1;
+function loadFood(num){
+  for (let i = 0 ; i < num; i++){
+    let food = new Food;
+    food.createObject();
+    allFood.push(food);
   }
-  circle.style.transform = `translate(${x}px, ${y}px) scale(${size})`;
+}
+function loadPlayer(){
+  player = new Player(200,200);
+  player.createObject();
+}
+function checkEat(){
+  player.move(x,y);
+  let playerPos = player.getObject().getBoundingClientRect();
+  for (let i = 0; i < allFood.length; i++){
+    let currentFood = allFood[i].getObject().getBoundingClientRect();
+    if ((playerPos.x < (currentFood.x+5)) && (playerPos.x > (currentFood.x-75)) && (playerPos.y <(currentFood.y+5) && playerPos.y > (currentFood.y-75))){
+      console.log("EAT");
+      allFood[i].removeObject();
+      allFood.splice(i, 1);
+      player.eat();
+      break;
+    }
+  }
   //console.log("Food x: " + foodPos.x + " Food y: " + foodPos.y);
   //console.log("Player x: " + playerPos.x + " Player y: " + playerPos.y);
 //  console.log("Mouse x: " + x + " Mouse y: " + y);
 }
-
+loadPlayer();
+loadFood(100);
+console.log(allFood);
+console.log(player);
 setInterval(checkEat, 500);
