@@ -3,6 +3,7 @@ html{
   height: 2000px;
   overflow: hidden;
 }
+
 .circle{
   background-color: blue;
   border-radius: 50%;
@@ -13,10 +14,16 @@ html{
   position: absolute;
   z-index: 1;
 }
+
 .food{
   background-color: red;
   border-radius: 50%;
   width: 30px;
   height: 30px;
   transform: translate(600px, 600px);
+}
+
+.log{
+  position: absolute;
+  z-index: 2;
 }

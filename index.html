@@ -3,15 +3,23 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width initial-scale=1 shrink-to-fit=no">
-    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <!-- build:css css/bootstrap.css -->
+    <!-- <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css"> -->
+    <!-- endbuild -->
+    <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/styles.css">
     <title>Simple Agar</title>
   </head>
   <body>
+    <div class="log fixed-top"></div>
 
-    <script src="node_modules/jquery/dist/jquery.slim.min.js"></script>
-    <script src="node_modules/popper.js/dist/umd/popper.min.js"></script>
-    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src = "/socket.io/socket.io.js"></script>
+    <!-- build:js js/bootstrap.js -->
+    <!-- <script src="node_modules/jquery/dist/jquery.slim.min.js"></script> -->
+    <!-- <script src="node_modules/popper.js/dist/umd/popper.min.js"></script> -->
+    <!-- <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script> -->
+    <!-- endbuild -->
+    <script src="js/bootstrap.js"></script>
     <script type="module" defer src="js/main.js"></script>
   </body>
 </html>

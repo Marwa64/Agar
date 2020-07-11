@@ -1,6 +1,14 @@
 import {Player} from './player.js';
 import {Food} from './food.js';
 
+var socket = io();
+socket.on('broadcast', data=>{
+  document.querySelector('.log').innerText = '';
+  console.log(data);
+  document.querySelector('.log').innerText = data.description;
+ });
+socket.emit('clientEvent', 'Sent an event from a Client!');
+
 let x, y, player, scrollSpeed=0.2, allFood = [];
 
 let edgeSize = 200;
