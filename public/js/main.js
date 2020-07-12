@@ -1,20 +1,72 @@
 import {Player} from './player.js';
 import {Food} from './food.js';
 
-var socket = io();
-socket.on('broadcast', data=>{
-  document.querySelector('.log').innerText = '';
-  console.log(data);
-  document.querySelector('.log').innerText = data.description;
- });
-socket.emit('clientEvent', 'Sent an event from a Client!');
+$(".modal").modal("show");
 
-let x, y, player, scrollSpeed=0.2, allFood = [];
+let x, y, thisPlayer = "", scrollSpeed=0.2, allFood = [], otherPlayers=[];
+let socket;
+
+let playBtn = document.querySelector("#play");
+playBtn.addEventListener('click', () => {
+  socket = io();
+  socket.on('newPlayer', data => {
+    console.log("New Player!");
+
+    // The new player created is this client if this client hasn't already been assigned a player
+    if (thisPlayer === ""){
+      loadPlayer(data.newPlayer.id, data.newPlayer.x, data.newPlayer.y);
+      window.addEventListener('mousemove', playerMovement);
+      setInterval(checkEat, 100);
+      setInterval(updateMovement, 100);
+
+    // if this client already is a player then the new player is added to the otherPlayers array
+    } else {
+      let otherPlayer = new Player(data.newPlayer.id);
+      otherPlayer.createObject(data.newPlayer.x, data.newPlayer.y);
+      otherPlayer.getObject().style.background = "green";
+      otherPlayers.push(otherPlayer);
+    }
+  });
+
+  // Getting an array of all the players that are currently in the game when this client joins
+  socket.on('currentPlayers', data => {
+    for (let i = 0; i < data.players.length; i++){
+      if (data.players[i].id != thisPlayer.getID()){
+        let otherPlayer = new Player(data.players[i].id);
+        otherPlayer.createObject(data.players[i].x, data.players[i].y);
+        otherPlayer.getObject().style.background = "green";
+        otherPlayers.push(otherPlayer);
+      }
+    }
+    console.log(otherPlayers);
+  });
+
+  // Updating the position of one of the other players based on the coordinates sent by the server
+  socket.on('updatePlayer', data => {
+    for (let i = 0; i < otherPlayers.length; i++){
+      if (data.player.id === otherPlayers[i].getID()){
+        otherPlayers[i].move(data.player.x, data.player.y);
+        break;
+      }
+    }
+  })
+
+  // When a player leaves their object is deleted and they are removed from the otherPlayers array
+  socket.on('playerLeave', data => {
+    for (let i = 0; i < otherPlayers.length; i++){
+      if (data.id ===  otherPlayers[i].getID()){
+        otherPlayers[i].removeObject();
+        otherPlayers.splice(i, 1);
+        break;
+      }
+    }
+  })
+});
 
 let edgeSize = 200;
 let timer = null;
 
-window.addEventListener('mousemove', () => {
+function playerMovement() {
   x = event.pageX - 50;
   y = event.pageY - 55;
 
@@ -102,7 +154,7 @@ window.addEventListener('mousemove', () => {
       return( false );
     }
   }
-});
+}
 
 function loadFood(num){
   for (let i = 0 ; i < num; i++){
@@ -111,13 +163,15 @@ function loadFood(num){
     allFood.push(food);
   }
 }
-function loadPlayer(){
-  player = new Player(200,200);
-  player.createObject();
+
+function loadPlayer(id, x, y){
+  thisPlayer = new Player(id);
+  thisPlayer.createObject(x,y);
 }
+
 function checkEat(){
-  player.move(x,y);
-  let playerPos = player.getObject().getBoundingClientRect();
+  thisPlayer.move(x,y);
+  let playerPos = thisPlayer.getObject().getBoundingClientRect();
   for (let i = 0; i < allFood.length; i++){
     //console.log(i);
     if (allFood[i].checkCollision(playerPos.x, playerPos.y, player.getSize())){
@@ -125,15 +179,19 @@ function checkEat(){
       let newFood  = new Food;
       newFood.createObject();
       allFood.push(newFood);
-      if (player.eat() && scrollSpeed > 0.05){
+      if (thisPlayer.eat() && scrollSpeed > 0.05){
         scrollSpeed -= 0.01;
       }
       break;
     }
   }
 }
-loadPlayer();
-loadFood(50);
-console.log(allFood);
-console.log(player);
-setInterval(checkEat, 100);
+
+function updateMovement(){
+  let playerPos = thisPlayer.getObject().getBoundingClientRect();
+  let playerMove = {id: thisPlayer.getID(),
+                    x: playerPos.x,
+                    y: playerPos.y,
+                    size: thisPlayer.getSize()}
+  socket.emit('playerMove', {playerInfo: playerMove});
+}

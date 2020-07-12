@@ -1,5 +1,6 @@
 export class Player{
-  constructor(){
+  constructor(id){
+    this.id = id;
     this.size = 1;
     this.speed = 1; // transition speed
     this.toggle = true;
@@ -33,7 +34,13 @@ export class Player{
   getSize(){
     return this.size;
   }
+  getID(){
+    return this.id;
+  }
   getObject(){
     return this.circle;
+  }
+  setSize(size){
+    this.size = size;
   }
 }
