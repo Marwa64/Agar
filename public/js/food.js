@@ -9,11 +9,11 @@ export class Food{
     this.circle.style.transform = `translate(${this.x}px, ${this.y}px)`;
     document.body.querySelector("#food").appendChild(this.circle);
   }
-  checkCollision = (x,y, size) => {
+  checkCollision = (right,left,top,bottom) => {
     let currentFood = this.circle.getBoundingClientRect();
     //console.log("Food x: " + currentFood.x + " Food y: " + currentFood.y);
     //console.log("Player x: " +x + " Player y: " + y);
-    if ((x < (currentFood.x+5)) && (x > (currentFood.x-(75 + (size-1)*100 ) )) && (y < (currentFood.y+5) && y > (currentFood.y-(75 + (size-1)*100 ) ) )){
+    if (right > currentFood.left && left < currentFood.right && bottom > currentFood.top && top < currentFood.bottom){
       console.log("EAT");
       this.circle.style.visibility = "hidden";
       return true;

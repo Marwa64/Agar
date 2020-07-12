@@ -5,7 +5,7 @@ html {
 
 .circle {
   background-color: blue;
-  border-radius: 50%;
+  border-radius: 100%;
   width: 100px;
   height: 100px;
   transform: translate(200px, 200px) scale(1);

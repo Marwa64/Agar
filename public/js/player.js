@@ -15,7 +15,7 @@ export class Player{
     this.circle.remove();
   }
   eat(){
-    if (this.size < 15.1){
+    if (this.size < 9.1){
       this.size += 0.2;
     }
     if (this.toggle === true){
@@ -29,6 +29,9 @@ export class Player{
       this.toggle = true;
     }
     return this.toggle;
+  }
+  kill(enemySize){
+    this.size += enemySize / 2;
   }
   move(x,y){
     this.circle.style.transform = `translate(${x}px, ${y}px) scale(${this.size})`;

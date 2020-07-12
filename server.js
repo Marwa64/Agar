@@ -12,9 +12,13 @@ app.get('/', function(req, res) {
    res.sendFile(__dirname + '/index.html');
 });
 
-for (let i = 0 ; i < 50; i++){
-  let food = {x: Math.floor(Math.random() * 2400),
-              y: Math.floor(Math.random() * 1500)};
+for (let i = 0 ; i < 70; i++){
+  let x = Math.floor(Math.random() * 2400);
+  let y = Math.floor(Math.random() * 2400);
+
+  let food = {x: x,
+              y: y};
+
   allFood.push(food);
 }
 
@@ -43,7 +47,7 @@ io.on('connection', socket => {
         break;
       }
     }
-  })
+  });
 
   socket.on('eat', food => {
     for (let i = 0; i < allFood.length; i++){
@@ -59,7 +63,19 @@ io.on('connection', socket => {
         break;
       }
     }
-  })
+  });
+
+  socket.on('playerKill', player => {
+    num--;
+    for (let i = 0; i < players.length; i++){
+      if (players[i].id === player.playerID){
+        socket.emit('playerDead', {playerID: players[i].id, description: 'Number of players: ' + num});
+        socket.broadcast.emit('playerDead', {playerID: players[i].id, description: 'Number of players: ' + num});
+        players.splice(i,1);
+        break;
+      }
+    }
+  });
 
   socket.on('disconnect', () => {
     num--;

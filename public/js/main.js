@@ -18,8 +18,9 @@ playBtn.addEventListener('click', () => {
     if (thisPlayer === ""){
       loadPlayer(data.newPlayer.id, data.newPlayer.x, data.newPlayer.y);
       window.addEventListener('mousemove', playerMovement);
-      setInterval(checkEat, 100);
-      setInterval(updateMovement, 100);
+      setInterval(checkEat, 10);
+      setInterval(updateMovement, 10);
+      setInterval(checkPlayerCollision, 10);
 
     // if this client already is a player then the new player is added to the otherPlayers array
     } else {
@@ -30,6 +31,7 @@ playBtn.addEventListener('click', () => {
     }
     log.innerText = data.description;
   });
+
   // Getting an array of all the players that are currently in the game and an array of all the food when this client joins
   socket.on('currentPlayers', data => {
     for (let i = 0; i < data.players.length; i++){
@@ -46,6 +48,7 @@ playBtn.addEventListener('click', () => {
       allFood.push(food);
     }
   });
+
   // Updating the position of one of the other players based on the coordinates sent by the server
   socket.on('updatePlayer', data => {
     for (let i = 0; i < otherPlayers.length; i++){
@@ -57,6 +60,7 @@ playBtn.addEventListener('click', () => {
       }
     }
   });
+
   // Gets the position of the food that was eaten from the server and removes it from the allFood array
   socket.on('removeFood', data => {
     for (let i = 0; i < allFood.length; i++){
@@ -67,12 +71,33 @@ playBtn.addEventListener('click', () => {
       }
     }
   });
+
   // Gets the position of the new food that was generated, creates the food object, and adds it to the allFood array
   socket.on('addFood', data => {
     let newFood = new Food(data.newFood.x, data.newFood.y);
     newFood.createObject();
     allFood.push(newFood);
   });
+
+  // Get's the ID of the player that died, if the player is this current player then we remove ourselves and disconnect. Otherwise we remove
+  // the other player from our screen and array
+  socket.on('playerDead', data => {
+    if (data.playerID === thisPlayer.getID()){
+      window.removeEventListener('mousemove', playerMovement);
+      thisPlayer.removeObject();
+      socket.disconnect();
+    } else {
+      for (let i = 0; i < otherPlayers.length; i++){
+        if (data.playerID ===  otherPlayers[i].getID()){
+          otherPlayers[i].removeObject();
+          otherPlayers.splice(i, 1);
+          break;
+        }
+      }
+    }
+    log.innerText = data.description;
+  });
+
   // When a player leaves their object is deleted and they are removed from the otherPlayers array
   socket.on('playerLeave', data => {
     for (let i = 0; i < otherPlayers.length; i++){
@@ -189,7 +214,7 @@ function checkEat(){
   let playerPos = thisPlayer.getObject().getBoundingClientRect();
   for (let i = 0; i < allFood.length; i++){
     //console.log(i);
-    if (allFood[i].checkCollision(playerPos.x, playerPos.y, thisPlayer.getSize())){
+    if (allFood[i].checkCollision(playerPos.right, playerPos.left, playerPos.top, playerPos.bottom)){
       let foodEaten = {x: allFood[i].getX(),
                        y: allFood[i].getY()};
       socket.emit('eat', {foodEaten: foodEaten});
@@ -201,7 +226,26 @@ function checkEat(){
     }
   }
 }
-
+function  checkPlayerCollision(){
+  let playerPos = thisPlayer.getObject().getBoundingClientRect();
+  for (let i=0; i < otherPlayers.length; i++){
+    let enemyPos = otherPlayers[i].getObject().getBoundingClientRect();
+    if (playerPos.right > enemyPos.left && playerPos.left < enemyPos.right && playerPos.bottom > enemyPos.top && playerPos.top < enemyPos.bottom){
+      if (thisPlayer.getSize() > otherPlayers[i].getSize()){
+        console.log("Collide!");
+        thisPlayer.kill(otherPlayers[i].getSize());
+        socket.emit('playerKill', {playerID: otherPlayers[i].getID()});
+        break;
+      }
+      if (thisPlayer.getSize() < otherPlayers[i].getSize()){
+        window.removeEventListener('mousemove', playerMovement);
+        thisPlayer.removeObject();
+        socket.disconnect();
+        break;
+      }
+    }
+  }
+}
 // Sends the current position of the player to the server, this function is called every 100ms
 function updateMovement(){
   let playerPos = thisPlayer.getObject().getBoundingClientRect();
