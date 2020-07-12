@@ -9,13 +9,15 @@ export class Player{
     this.circle = document.createElement("div");
     this.circle.classList.add("circle");
     this.circle.style.transform = `translate(${x}px, ${y}px)`;
-    document.body.appendChild(this.circle);
+    document.body.querySelector("#players").appendChild(this.circle);
   }
   removeObject(){
     this.circle.remove();
   }
   eat(){
-    this.size += 0.2;
+    if (this.size < 15.1){
+      this.size += 0.2;
+    }
     if (this.toggle === true){
       let val = Math.floor(this.size * 10);
       if (val % 5 === 0 && this.speed < 5){
@@ -42,5 +44,9 @@ export class Player{
   }
   setSize(size){
     this.size = size;
+  }
+  setSpeed(speed){
+    this.speed = speed;
+    this.circle.style.transitionDuration = `${this.speed}s`;
   }
 }

@@ -5,8 +5,10 @@ $(".modal").modal("show");
 
 let x, y, thisPlayer = "", scrollSpeed=0.2, allFood = [], otherPlayers=[];
 let socket;
+let log = document.querySelector(".log");
 
 let playBtn = document.querySelector("#play");
+// When the player clicks on play, we'll connect to the server
 playBtn.addEventListener('click', () => {
   socket = io();
   socket.on('newPlayer', data => {
@@ -26,9 +28,9 @@ playBtn.addEventListener('click', () => {
       otherPlayer.getObject().style.background = "green";
       otherPlayers.push(otherPlayer);
     }
+    log.innerText = data.description;
   });
-
-  // Getting an array of all the players that are currently in the game when this client joins
+  // Getting an array of all the players that are currently in the game and an array of all the food when this client joins
   socket.on('currentPlayers', data => {
     for (let i = 0; i < data.players.length; i++){
       if (data.players[i].id != thisPlayer.getID()){
@@ -38,19 +40,39 @@ playBtn.addEventListener('click', () => {
         otherPlayers.push(otherPlayer);
       }
     }
-    console.log(otherPlayers);
+    for (let j = 0; j < data.food.length; j++){
+      let food = new Food(data.food[j].x, data.food[j].y);
+      food.createObject();
+      allFood.push(food);
+    }
   });
-
   // Updating the position of one of the other players based on the coordinates sent by the server
   socket.on('updatePlayer', data => {
     for (let i = 0; i < otherPlayers.length; i++){
       if (data.player.id === otherPlayers[i].getID()){
+        otherPlayers[i].setSize(data.player.size);
+        otherPlayers[i].setSpeed(1);
         otherPlayers[i].move(data.player.x, data.player.y);
         break;
       }
     }
-  })
-
+  });
+  // Gets the position of the food that was eaten from the server and removes it from the allFood array
+  socket.on('removeFood', data => {
+    for (let i = 0; i < allFood.length; i++){
+      if ( (allFood[i].getX() === data.foodEaten.x) && (allFood[i].getY() === data.foodEaten.y) ){
+        allFood[i].removeObject();
+        allFood.splice(i, 1);
+        break;
+      }
+    }
+  });
+  // Gets the position of the new food that was generated, creates the food object, and adds it to the allFood array
+  socket.on('addFood', data => {
+    let newFood = new Food(data.newFood.x, data.newFood.y);
+    newFood.createObject();
+    allFood.push(newFood);
+  });
   // When a player leaves their object is deleted and they are removed from the otherPlayers array
   socket.on('playerLeave', data => {
     for (let i = 0; i < otherPlayers.length; i++){
@@ -60,7 +82,8 @@ playBtn.addEventListener('click', () => {
         break;
       }
     }
-  })
+    log.innerText = data.description;
+  });
 });
 
 let edgeSize = 200;
@@ -156,14 +179,6 @@ function playerMovement() {
   }
 }
 
-function loadFood(num){
-  for (let i = 0 ; i < num; i++){
-    let food = new Food;
-    food.createObject();
-    allFood.push(food);
-  }
-}
-
 function loadPlayer(id, x, y){
   thisPlayer = new Player(id);
   thisPlayer.createObject(x,y);
@@ -174,11 +189,11 @@ function checkEat(){
   let playerPos = thisPlayer.getObject().getBoundingClientRect();
   for (let i = 0; i < allFood.length; i++){
     //console.log(i);
-    if (allFood[i].checkCollision(playerPos.x, playerPos.y, player.getSize())){
+    if (allFood[i].checkCollision(playerPos.x, playerPos.y, thisPlayer.getSize())){
+      let foodEaten = {x: allFood[i].getX(),
+                       y: allFood[i].getY()};
+      socket.emit('eat', {foodEaten: foodEaten});
       allFood.splice(i, 1);
-      let newFood  = new Food;
-      newFood.createObject();
-      allFood.push(newFood);
       if (thisPlayer.eat() && scrollSpeed > 0.05){
         scrollSpeed -= 0.01;
       }
@@ -187,6 +202,7 @@ function checkEat(){
   }
 }
 
+// Sends the current position of the player to the server, this function is called every 100ms
 function updateMovement(){
   let playerPos = thisPlayer.getObject().getBoundingClientRect();
   let playerMove = {id: thisPlayer.getID(),

@@ -1,13 +1,13 @@
 export class Food{
-  constructor(){
-    this.x = Math.floor(Math.random() * 2400);
-    this.y = Math.floor(Math.random() * 1500) ;
+  constructor(x,y){
+    this.x = x;
+    this.y = y;
   }
   createObject = () => {
     this.circle = document.createElement("div");
     this.circle.classList.add("food");
     this.circle.style.transform = `translate(${this.x}px, ${this.y}px)`;
-    document.body.appendChild(this.circle);
+    document.body.querySelector("#food").appendChild(this.circle);
   }
   checkCollision = (x,y, size) => {
     let currentFood = this.circle.getBoundingClientRect();
@@ -21,7 +21,16 @@ export class Food{
       return false;
     }
   }
+  removeObject(){
+    this.circle.style.visibility = "hidden";
+  }
   getObject = () => {
     return this.circle;
+  }
+  getX(){
+    return this.x;
+  }
+  getY(){
+    return this.y;
   }
 }
