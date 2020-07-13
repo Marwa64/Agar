@@ -5,7 +5,7 @@ import {DeadlySquare} from './deadlySquare.js';
 $(".modal").modal("show");
 
 let x, y, thisPlayer="", scrollSpeed=0.2, allFood=[], otherPlayers=[], deadlySquares=[];
-let socket;
+let socket, eatInterval, updateMovementInterval, playerCollisionInterval, squareCollisionInterval;
 let log = document.querySelector(".log");
 
 let playBtn = document.querySelector("#play");
@@ -17,7 +17,12 @@ playBtn.addEventListener('click', () => {
 
     // The new player created is this client if this client hasn't already been assigned a player
     if (thisPlayer === ""){
+      console.log(data.newPlayer.color);
       loadPlayer(data.newPlayer.id, data.newPlayer.x, data.newPlayer.y);
+      thisPlayer.getObject().style.background = `${data.newPlayer.color}`;
+      let name = document.querySelector("#playerName").value;
+      thisPlayer.setName(name);
+      socket.emit('getName', {id: thisPlayer.getID(), name: name});
       thisPlayer.getObject().scrollIntoView();
       window.addEventListener('mousemove', playerMovement);
       setInterval(checkEat, 10);
@@ -29,7 +34,7 @@ playBtn.addEventListener('click', () => {
     } else {
       let otherPlayer = new Player(data.newPlayer.id);
       otherPlayer.createObject(data.newPlayer.x, data.newPlayer.y);
-      otherPlayer.getObject().style.background = "green";
+      otherPlayer.getObject().style.background = `${data.newPlayer.color}`;
       otherPlayers.push(otherPlayer);
     }
     log.innerText = data.description;
@@ -41,7 +46,8 @@ playBtn.addEventListener('click', () => {
       if (data.players[i].id != thisPlayer.getID()){
         let otherPlayer = new Player(data.players[i].id);
         otherPlayer.createObject(data.players[i].x, data.players[i].y);
-        otherPlayer.getObject().style.background = "green";
+        otherPlayer.getObject().style.background = `${data.players[i].color}`;
+        otherPlayer.setName(data.players[i].name);
         otherPlayers.push(otherPlayer);
       }
     }
@@ -69,6 +75,15 @@ playBtn.addEventListener('click', () => {
     }
   });
 
+  socket.on('setName', data => {
+    for (let i = 0; i < otherPlayers.length; i++){
+      if (data.player.id === otherPlayers[i].getID()){
+        otherPlayers[i].setName(data.player.name);
+        break;
+      }
+    }
+  })
+
   // Gets the position of the food that was eaten from the server and removes it from the allFood array
   socket.on('removeFood', data => {
     for (let i = 0; i < allFood.length; i++){
@@ -92,8 +107,17 @@ playBtn.addEventListener('click', () => {
   socket.on('playerDead', data => {
     if (data.playerID === thisPlayer.getID()){
       window.removeEventListener('mousemove', playerMovement);
+      document.body.querySelector("#food").innerHTML = "";
+      document.body.querySelector("#squares").innerHTML = "";
+      document.body.querySelector("#players").innerHTML = "";
+      allFood = [];
+      deadlySquares = [];
+      otherPlayers = [];
       thisPlayer.removeObject();
       socket.disconnect();
+      thisPlayer = "";
+      document.querySelector("h2").innerText = "You Died, try again!";
+      $(".modal").modal("show");
     } else {
       for (let i = 0; i < otherPlayers.length; i++){
         if (data.playerID ===  otherPlayers[i].getID()){
@@ -220,56 +244,71 @@ function loadPlayer(id, x, y){
 }
 
 function checkEat(){
-  let playerPos = thisPlayer.getObject().getBoundingClientRect();
-  for (let i = 0; i < allFood.length; i++){
-    //console.log(i);
-    if (allFood[i].checkCollision(playerPos.right, playerPos.left, playerPos.top, playerPos.bottom)){
-      let foodEaten = {x: allFood[i].getX(),
-                       y: allFood[i].getY()};
-      socket.emit('eat', {foodEaten: foodEaten});
-      allFood.splice(i, 1);
-      if (thisPlayer.eat() && scrollSpeed > 0.05){
-        scrollSpeed -= 0.01;
+  try {
+    let playerPos = thisPlayer.getObject().getBoundingClientRect();
+    for (let i = 0; i < allFood.length; i++){
+      //console.log(i);
+      if (allFood[i].checkCollision(playerPos.right, playerPos.left, playerPos.top, playerPos.bottom)){
+        let foodEaten = {x: allFood[i].getX(),
+                         y: allFood[i].getY()};
+        socket.emit('eat', {foodEaten: foodEaten});
+        allFood.splice(i, 1);
+        if (thisPlayer.eat() && scrollSpeed > 0.05){
+          scrollSpeed -= 0.01;
+        }
+        break;
       }
-      break;
     }
+  } catch(error){
+
   }
 }
 function  checkPlayerCollision(){
-  let playerPos = thisPlayer.getObject().getBoundingClientRect();
-  for (let i=0; i < otherPlayers.length; i++){
-    let enemyPos = otherPlayers[i].getObject().getBoundingClientRect();
-    if (playerPos.right > enemyPos.left && playerPos.left < enemyPos.right && playerPos.bottom > enemyPos.top && playerPos.top < enemyPos.bottom){
-      if (thisPlayer.getSize() > otherPlayers[i].getSize()){
-        console.log("Collide!");
-        thisPlayer.kill(otherPlayers[i].getSize());
-        socket.emit('playerKill', {playerID: otherPlayers[i].getID()});
-        break;
-      }
-      if (thisPlayer.getSize() < otherPlayers[i].getSize()){
-        window.removeEventListener('mousemove', playerMovement);
-        thisPlayer.removeObject();
-        socket.disconnect();
-        break;
+  try{
+    let playerPos = thisPlayer.getObject().getBoundingClientRect();
+    for (let i=0; i < otherPlayers.length; i++){
+      let enemyPos = otherPlayers[i].getObject().getBoundingClientRect();
+      if (playerPos.right > enemyPos.left && playerPos.left < enemyPos.right && playerPos.bottom > enemyPos.top && playerPos.top < enemyPos.bottom){
+        if (thisPlayer.getSize() > otherPlayers[i].getSize()){
+          console.log("Collide!");
+          thisPlayer.kill(otherPlayers[i].getSize());
+          socket.emit('playerKill', {playerID: otherPlayers[i].getID()});
+          break;
+        }
+        if (thisPlayer.getSize() < otherPlayers[i].getSize()){
+          window.removeEventListener('mousemove', playerMovement);
+          thisPlayer.removeObject();
+          socket.disconnect();
+          break;
+        }
       }
     }
+  } catch(error) {
   }
 }
 function checkSquareCollision(){
-  let playerPos = thisPlayer.getObject().getBoundingClientRect();
-  for (let i=0; i < deadlySquares.length; i++){
-    if (deadlySquares[i].checkCollision(playerPos.right, playerPos.left, playerPos.top, playerPos.bottom)){
-      socket.emit('playerKill', {playerID: thisPlayer.getID()});
-      break;
+  try{
+    let playerPos = thisPlayer.getObject().getBoundingClientRect();
+    for (let i=0; i < deadlySquares.length; i++){
+      if (deadlySquares[i].checkCollision(playerPos.right, playerPos.left, playerPos.top, playerPos.bottom)){
+        socket.emit('playerKill', {playerID: thisPlayer.getID()});
+        break;
+      }
     }
+  }catch(err){
+
   }
 }
 // Sends the current position of the player to the server, this function is called every 100ms
 function updateMovement(){
-  let playerPos = thisPlayer.getObject().getBoundingClientRect();
-  let playerMove = {id: thisPlayer.getID(),
-                    x: playerPos.x,
-                    y: playerPos.y,
-                    size: thisPlayer.getSize()}
-  socket.emit('playerMove', {playerInfo: playerMove});
+  try{
+    let playerPos = thisPlayer.getObject().getBoundingClientRect();
+    let playerMove = {id: thisPlayer.getID(),
+                      x: playerPos.x,
+                      y: playerPos.y,
+                      size: thisPlayer.getSize()}
+    socket.emit('playerMove', {playerInfo: playerMove});
+  }catch(err){
+
+  }
 }

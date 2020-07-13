@@ -4,7 +4,7 @@ const app = express();
 let server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
-let num = 0, id = 0, players=[], allFood=[], deadlySquares = [];
+let num = 0, id = 0, colors=['#5bde60', 'orange', '#8484f9', 'yellow', 'pink'], players=[], allFood=[], deadlySquares = [];
 
 app.use(express.static(__dirname + '/public/'));
 
@@ -28,10 +28,13 @@ for (let i = 0; i < 15; i++){
 io.on('connection', socket => {
   num++;
   // Creates a new player and adds it to the array that contains all the players
+  let playerColor = Math.floor(Math.random() * 5);
   let newPlayer = {id: socket.id,
                     x: Math.floor(Math.random() * 2400),
                     y: Math.floor(Math.random() * 1500),
-                    size: 1};
+                    size: 1,
+                    color: colors[playerColor],
+                    name: ""};
   players.push(newPlayer);
 
   // Sends both the new player and all the other players the object containing the details of the new player
@@ -51,7 +54,15 @@ io.on('connection', socket => {
       }
     }
   });
-
+  socket.on('getName', player => {
+    for (let i = 0; i < players.length; i++){
+      if (players[i].id === player.id){
+        players[i].name = player.name;
+        socket.broadcast.emit('setName', {player: players[i]});
+        break;
+      }
+    }
+  })
   socket.on('eat', food => {
     for (let i = 0; i < allFood.length; i++){
       if ( (allFood[i].x === food.foodEaten.x) && (allFood[i].y === food.foodEaten.y) ){

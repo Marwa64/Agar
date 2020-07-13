@@ -3,6 +3,17 @@ html {
   height: 2000px;
   overflow: hidden; }
 
+.modal-content {
+  padding: 10px 10px 10px 10px;
+  background-color: #ffbb90;}
+
+h2, #play{
+  font-family: 'Modak', cursive;
+}
+#play{
+  font-size: 20px;
+  padding: 5px 25px 5px 25px;
+}
 .circle {
   background-color: blue;
   border-radius: 100%;
@@ -12,7 +23,15 @@ html {
   transform: translate(200px, 200px) scale(1);
   transition: all 1s;
   position: absolute;
-  z-index: 1; }
+  z-index: 1;
+  text-align: center;}
+
+.name {
+  display: inline-block;
+  vertical-align: middle;
+  margin-top: 30%;
+  font-family: 'Modak', cursive;
+  font-size: 20px;}
 
 .food {
   background-color: red;

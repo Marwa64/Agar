@@ -2,21 +2,28 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width initial-scale=1 shrink-to-fit=no">
     <!-- build:css css/bootstrap.css -->
     <!-- <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css"> -->
     <!-- endbuild -->
     <link rel="stylesheet" href="css/bootstrap.css">
+    <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <title>Simple Agar</title>
   </head>
   <body>
-    <div class="modal">
+    <div class="modal mt-5" data-backdrop="static">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header text-center"><h2 class="text-center">Welcome to Agar!</h2></div>
+          <div class="modal-header justify-content-center"><h2>Welcome to Agar!</h2></div>
           <div class="modal-body">
-            <button type="button" name="button" id="play" data-dismiss="modal">Play</button>
+            <div class="row mt-2">
+              <div class="col-8 offset-2">
+                <input type="text" class="form-control text-center" id="playerName" placeholder="Enter your name">
+              </div>
+            </div>
+            <div class="row justify-content-center mt-4">
+              <button type="button" class="btn btn-danger" id="play" data-dismiss="modal">Play</button>
+            </div>
           </div>
         </div>
       </div>

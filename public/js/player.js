@@ -12,14 +12,17 @@ export class Player{
     this.circle.style.transform = `translate(${x}px, ${y}px)`;
     document.body.querySelector("#players").appendChild(this.circle);
   }
+  setName(name){
+    this.circle.innerHTML = `<span class="name"> ${name} </span>`;
+  }
   removeObject(){
     this.circle.remove();
   }
   eat(){
-    if (this.size < 9.1){
-      this.size += 0.2;
-    }
     if (this.count === 6){
+      if (this.size < 9.1){
+        this.size += 0.2;
+      }
       let val = Math.floor(this.size * 10);
       if (val % 5 === 0 && this.speed < 5){
         this.speed += 1;
