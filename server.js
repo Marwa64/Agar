@@ -79,7 +79,6 @@ io.on('connection', socket => {
   });
 
   socket.on('playerKill', player => {
-    num--;
     for (let i = 0; i < players.length; i++){
       if (players[i].id === player.playerID){
         socket.emit('playerDead', {playerID: players[i].id, description: 'Number of players: ' + num});
