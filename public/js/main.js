@@ -1,9 +1,10 @@
 import {Player} from './player.js';
 import {Food} from './food.js';
+import {DeadlySquare} from './deadlySquare.js';
 
 $(".modal").modal("show");
 
-let x, y, thisPlayer = "", scrollSpeed=0.2, allFood = [], otherPlayers=[];
+let x, y, thisPlayer="", scrollSpeed=0.2, allFood=[], otherPlayers=[], deadlySquares=[];
 let socket;
 let log = document.querySelector(".log");
 
@@ -17,10 +18,12 @@ playBtn.addEventListener('click', () => {
     // The new player created is this client if this client hasn't already been assigned a player
     if (thisPlayer === ""){
       loadPlayer(data.newPlayer.id, data.newPlayer.x, data.newPlayer.y);
+      thisPlayer.getObject().scrollIntoView();
       window.addEventListener('mousemove', playerMovement);
       setInterval(checkEat, 10);
       setInterval(updateMovement, 10);
       setInterval(checkPlayerCollision, 10);
+      setInterval(checkSquareCollision, 10);
 
     // if this client already is a player then the new player is added to the otherPlayers array
     } else {
@@ -32,8 +35,8 @@ playBtn.addEventListener('click', () => {
     log.innerText = data.description;
   });
 
-  // Getting an array of all the players that are currently in the game and an array of all the food when this client joins
-  socket.on('currentPlayers', data => {
+  // Getting an array of all the players that are currently in the game, an array of all the food, and an array of all the deadly squares when this client joins
+  socket.on('currentData', data => {
     for (let i = 0; i < data.players.length; i++){
       if (data.players[i].id != thisPlayer.getID()){
         let otherPlayer = new Player(data.players[i].id);
@@ -46,6 +49,11 @@ playBtn.addEventListener('click', () => {
       let food = new Food(data.food[j].x, data.food[j].y);
       food.createObject();
       allFood.push(food);
+    }
+    for (let j = 0; j < data.squares.length; j++){
+      let newSquare = new DeadlySquare(data.squares[j].x, data.squares[j].y);
+      newSquare.createObject();
+      deadlySquares.push(newSquare);
     }
   });
 
@@ -117,6 +125,8 @@ let timer = null;
 function playerMovement() {
   x = event.pageX - 50;
   y = event.pageY - 55;
+
+  thisPlayer.move(x,y);
 
   let viewportX = event.clientX;
   let viewportY = event.clientY;
@@ -210,7 +220,6 @@ function loadPlayer(id, x, y){
 }
 
 function checkEat(){
-  thisPlayer.move(x,y);
   let playerPos = thisPlayer.getObject().getBoundingClientRect();
   for (let i = 0; i < allFood.length; i++){
     //console.log(i);
@@ -243,6 +252,15 @@ function  checkPlayerCollision(){
         socket.disconnect();
         break;
       }
+    }
+  }
+}
+function checkSquareCollision(){
+  let playerPos = thisPlayer.getObject().getBoundingClientRect();
+  for (let i=0; i < deadlySquares.length; i++){
+    if (deadlySquares[i].checkCollision(playerPos.right, playerPos.left, playerPos.top, playerPos.bottom)){
+      socket.emit('playerKill', {playerID: thisPlayer.getID()});
+      break;
     }
   }
 }

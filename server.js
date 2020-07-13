@@ -4,7 +4,7 @@ const app = express();
 let server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
-let num = 0, id = 0, players=[], allFood=[];
+let num = 0, id = 0, players=[], allFood=[], deadlySquares = [];
 
 app.use(express.static(__dirname + '/public/'));
 
@@ -13,13 +13,16 @@ app.get('/', function(req, res) {
 });
 
 for (let i = 0 ; i < 70; i++){
-  let x = Math.floor(Math.random() * 2400);
-  let y = Math.floor(Math.random() * 2400);
-
-  let food = {x: x,
-              y: y};
+  let food = {x: Math.floor(Math.random() * 2400),
+              y: Math.floor(Math.random() * 2400)};
 
   allFood.push(food);
+}
+
+for (let i = 0; i < 15; i++){
+  let square = {x: Math.floor(Math.random() * 2400),
+                y: Math.floor(Math.random() * 2400)};
+  deadlySquares.push(square);
 }
 
 io.on('connection', socket => {
@@ -35,7 +38,7 @@ io.on('connection', socket => {
   socket.emit('newPlayer', {description: 'Number of players: ' + num, newPlayer: newPlayer});
   socket.broadcast.emit('newPlayer', {description: 'Number of players: ' + num, newPlayer: newPlayer});
   // Sends an array containing all the current players and all the current food to the new player
-  socket.emit('currentPlayers', {players: players, food: allFood});
+  socket.emit('currentData', {players: players, food: allFood, squares: deadlySquares});
   // Receives the updated coordinates of one of the players, updates it in the array, and sends it to all the other players
   socket.on('playerMove', player => {
     for (let i = 0; i < players.length; i++){
@@ -52,7 +55,6 @@ io.on('connection', socket => {
   socket.on('eat', food => {
     for (let i = 0; i < allFood.length; i++){
       if ( (allFood[i].x === food.foodEaten.x) && (allFood[i].y === food.foodEaten.y) ){
-        console.log("Eat");
         socket.broadcast.emit('removeFood', {foodEaten: allFood[i]});
         allFood.splice(i, 1);
         let newFood = {x: Math.floor(Math.random() * 2400),

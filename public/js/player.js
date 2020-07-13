@@ -3,7 +3,8 @@ export class Player{
     this.id = id;
     this.size = 1;
     this.speed = 1; // transition speed
-    this.toggle = true;
+    this.count = 0;
+    this.toggle = false;
   }
   createObject(x,y){
     this.circle = document.createElement("div");
@@ -18,15 +19,17 @@ export class Player{
     if (this.size < 9.1){
       this.size += 0.2;
     }
-    if (this.toggle === true){
+    if (this.count === 6){
       let val = Math.floor(this.size * 10);
       if (val % 5 === 0 && this.speed < 5){
         this.speed += 1;
       }
       this.circle.style.transitionDuration = `${this.speed}s`;
-      this.toggle = false;
-    } else {
+      this.count = 0;
       this.toggle = true;
+    } else {
+      this.count++;
+      this.toggle = false;
     }
     return this.toggle;
   }
